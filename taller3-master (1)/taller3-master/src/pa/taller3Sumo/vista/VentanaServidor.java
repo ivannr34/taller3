@@ -2,25 +2,47 @@ package pa.taller3Sumo.vista;
 
 import javax.swing.*;
 import java.awt.*;
-import pa.taller3Sumo.socket.ServidorSocket;
+import pa.taller3Sumo.control.ControlServidor;
 
 public class VentanaServidor extends JFrame {
 
     private JTextArea areaCombate;
     private JButton btnIniciarServidor;
     private JButton btnVolver;
-    private ServidorSocket servidor;
     private VentanaPrincipal ventanaPrincipal;
+    private ControlServidor controlServidor;
 
     public VentanaServidor(VentanaPrincipal ventanaPrincipal) {
         this.ventanaPrincipal = ventanaPrincipal;
+        this.controlServidor = new ControlServidor(this);
 
+        configurarVentana();
+        inicializarComponentes();
+        construirInterfaz();
+        agregarEventos();
+    }
+
+    private void configurarVentana() {
         setTitle("Servidor Combate");
         setSize(650, 550);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
+    }
 
+    private void inicializarComponentes() {
+        areaCombate = new JTextArea();
+        areaCombate.setEditable(false);
+        areaCombate.setFont(new Font("Monospaced", Font.PLAIN, 13));
+
+        btnIniciarServidor = new JButton("Iniciar Servidor");
+        btnIniciarServidor.setFont(new Font("Arial", Font.BOLD, 16));
+
+        btnVolver = new JButton("Volver");
+        btnVolver.setFont(new Font("Arial", Font.BOLD, 16));
+    }
+
+    private void construirInterfaz() {
         JLabel titulo = new JLabel("DOHYO - COMBATE DE SUMO", JLabel.CENTER);
         titulo.setFont(new Font("Arial", Font.BOLD, 22));
         add(titulo, BorderLayout.NORTH);
@@ -28,22 +50,15 @@ public class VentanaServidor extends JFrame {
         JPanel panelCentro = new JPanel(new BorderLayout());
 
         JLabel lblImagen = new JLabel("", JLabel.CENTER);
-
         java.net.URL rutaImagen = getClass().getResource("/pa/taller3Sumo/Recursos/ring.jpg");
+
         if (rutaImagen != null) {
-            ImageIcon icon = new ImageIcon(rutaImagen);
-            lblImagen.setIcon(icon);
+            lblImagen.setIcon(new ImageIcon(rutaImagen));
         } else {
             lblImagen.setText("Imagen del ring no disponible");
         }
 
         panelCentro.add(lblImagen, BorderLayout.CENTER);
-
-        btnIniciarServidor = new JButton("Iniciar Servidor");
-        btnIniciarServidor.setFont(new Font("Arial", Font.BOLD, 16));
-
-        btnVolver = new JButton("Volver");
-        btnVolver.setFont(new Font("Arial", Font.BOLD, 16));
 
         JPanel panelBoton = new JPanel();
         panelBoton.add(btnIniciarServidor);
@@ -53,14 +68,12 @@ public class VentanaServidor extends JFrame {
 
         add(panelCentro, BorderLayout.CENTER);
 
-        areaCombate = new JTextArea();
-        areaCombate.setEditable(false);
-        areaCombate.setFont(new Font("Monospaced", Font.PLAIN, 13));
-
         JScrollPane scroll = new JScrollPane(areaCombate);
         scroll.setPreferredSize(new Dimension(650, 200));
         add(scroll, BorderLayout.SOUTH);
+    }
 
+    private void agregarEventos() {
         btnIniciarServidor.addActionListener(e -> iniciarServidor());
 
         btnVolver.addActionListener(e -> {
@@ -78,13 +91,7 @@ public class VentanaServidor extends JFrame {
 
     private void iniciarServidor() {
         try {
-            servidor = new ServidorSocket(this);
-
-            Thread hiloServidor = new Thread(() -> {
-                servidor.iniciar();
-            });
-
-            hiloServidor.start();
+            controlServidor.iniciarServidor();
 
             btnIniciarServidor.setEnabled(false);
             registrarMovimiento("Servidor iniciado en puerto 5000...");
@@ -99,6 +106,13 @@ public class VentanaServidor extends JFrame {
     }
 
     public void registrarMovimiento(String texto) {
-        areaCombate.append(texto + "\n");
+        SwingUtilities.invokeLater(() -> areaCombate.append(texto + "\n"));
+    }
+
+    public void mostrarGanador(String nombreGanador, String resumenCombate) {
+        SwingUtilities.invokeLater(() -> {
+            VentanaGanador ventanaGanador = new VentanaGanador(nombreGanador, resumenCombate);
+            ventanaGanador.setVisible(true);
+        });
     }
 }

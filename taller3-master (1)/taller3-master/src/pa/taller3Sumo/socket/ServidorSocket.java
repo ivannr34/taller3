@@ -10,56 +10,46 @@ import pa.taller3Sumo.vista.VentanaServidor;
 
 public class ServidorSocket {
 
-    private List<Luchador> luchadores = new ArrayList<>();
-    private List<ManejadorCliente> clientes = new ArrayList<>();
-    private VentanaServidor vista;
+    private static final int PUERTO = 5000;
+
+    private final List<Luchador> luchadores = new ArrayList<>();
+    private final List<ManejadorCliente> clientes = new ArrayList<>();
+    private final VentanaServidor vista;
 
     public ServidorSocket(VentanaServidor vista) {
-
         this.vista = vista;
-
     }
 
     public void iniciar() {
+        try (ServerSocket server = new ServerSocket(PUERTO)) {
 
-        try {
-
-            ServerSocket server = new ServerSocket(5000);
-
-            vista.registrarMovimiento("Servidor iniciado");
+            vista.registrarMovimiento("Servidor iniciado en puerto " + PUERTO);
 
             while (true) {
-
                 Socket socket = server.accept();
 
                 ManejadorCliente handler = new ManejadorCliente(socket, this);
                 clientes.add(handler);
                 handler.start();
-
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+            vista.registrarMovimiento("Error en el servidor: " + e.getMessage());
         }
-
     }
 
-    public synchronized void agregarLuchador(Luchador l) {
+    public synchronized void agregarLuchador(Luchador luchador) {
+        luchadores.add(luchador);
 
-        luchadores.add(l);
-
-        vista.registrarMovimiento("Luchador recibido: " + l.getNombre());
+        vista.registrarMovimiento("Luchador recibido: " + luchador.getNombre());
 
         if (luchadores.size() == 2) {
-
             iniciarCombate();
-
         }
-
     }
 
     private void iniciarCombate() {
-
         Dohyo dohyo = new Dohyo(luchadores.get(0), luchadores.get(1));
 
         vista.registrarMovimiento("Iniciando combate...");
@@ -68,18 +58,50 @@ public class ServidorSocket {
 
         Luchador ganador = dohyo.getGanador();
 
-        vista.registrarMovimiento("GANADOR: " + ganador.getNombre());
-
-        luchadores.clear();
-        
-        for (ManejadorCliente c : clientes) {
-
-            if (c.getLuchador().getNombre().equals(ganador.getNombre())) {
-                c.enviarResultado("GANASTE");
-            } else {
-                c.enviarResultado("PERDISTE");
-            }
+        if (ganador == null) {
+            vista.registrarMovimiento("No se pudo determinar el ganador.");
+            luchadores.clear();
+            return;
         }
 
+        String resumenCombate = construirResumenCombate(dohyo, ganador);
+
+        vista.registrarMovimiento("GANADOR: " + ganador.getNombre());
+
+        // 🔥 AQUÍ SE CONECTA LA VENTANA GANADOR
+        vista.mostrarGanador(ganador.getNombre(), resumenCombate);
+
+        enviarResultadosClientes(ganador);
+
+        luchadores.clear();
+    }
+
+    private String construirResumenCombate(Dohyo dohyo, Luchador ganador) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("===== RESUMEN DEL COMBATE =====\n\n");
+        sb.append("Luchador 1: ").append(luchadores.get(0).getNombre())
+          .append(" | Peso: ").append(luchadores.get(0).getPeso())
+          .append(" | Túnica: ").append(luchadores.get(0).getTunica()).append("\n");
+
+        sb.append("Luchador 2: ").append(luchadores.get(1).getNombre())
+          .append(" | Peso: ").append(luchadores.get(1).getPeso())
+          .append(" | Túnica: ").append(luchadores.get(1).getTunica()).append("\n\n");
+
+        sb.append("Ganador final: ").append(ganador.getNombre()).append("\n");
+
+        return sb.toString();
+    }
+
+    private void enviarResultadosClientes(Luchador ganador) {
+        for (ManejadorCliente cliente : clientes) {
+            if (cliente.getLuchador() != null) {
+                if (cliente.getLuchador().getNombre().equals(ganador.getNombre())) {
+                    cliente.enviarResultado("GANASTE");
+                } else {
+                    cliente.enviarResultado("PERDISTE");
+                }
+            }
+        }
     }
 }

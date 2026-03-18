@@ -22,12 +22,11 @@ public class VentanaPrincipal extends JFrame {
     private JLabel lblImagen;
 
     public VentanaPrincipal() {
-        initComponents();
-        configurarVentana();
-        agregarEventos();
+        Ventana1();
+        ConfigurarVentana();
     }
 
-    private void initComponents() {
+    private void Ventana1() {
 
         lblTitulo = new JLabel("COMBATE DE SUMO", SwingConstants.CENTER);
         lblTitulo.setFont(new Font("Arial", Font.BOLD, 24));
@@ -36,11 +35,15 @@ public class VentanaPrincipal extends JFrame {
         lblImagen = new JLabel();
         lblImagen.setHorizontalAlignment(SwingConstants.CENTER);
 
-        java.net.URL rutaImagen = getClass().getResource("/pa/taller3Sumo/Recursos/ring.jpg");
+        java.net.URL rutaImagen = getClass().getResource("/pa/taller3Sumo/Recursos/sumo.png");
         if (rutaImagen != null) {
-            lblImagen.setIcon(new ImageIcon(rutaImagen));
+            ImageIcon iconoOriginal = new ImageIcon(rutaImagen);
+            ImageIcon iconoEscalado = new ImageIcon(
+                    iconoOriginal.getImage().getScaledInstance(300, 220, java.awt.Image.SCALE_SMOOTH)
+            );
+            lblImagen.setIcon(iconoEscalado);
         } else {
-            lblImagen.setText("Imagen del ring no disponible");
+            lblImagen.setText("Imagen no disponible");
             lblImagen.setFont(new Font("Arial", Font.ITALIC, 14));
         }
 
@@ -61,7 +64,7 @@ public class VentanaPrincipal extends JFrame {
         btnSalir.setForeground(Color.WHITE);
     }
 
-    private void configurarVentana() {
+    private void ConfigurarVentana() {
         setTitle("Ventana Principal");
         setSize(600, 500);
         setLocationRelativeTo(null);
@@ -89,22 +92,15 @@ public class VentanaPrincipal extends JFrame {
         add(panelBotones, BorderLayout.SOUTH);
     }
 
-    private void agregarEventos() {
-        btnServidor.addActionListener(e -> {
-            VentanaServidor ventanaServidor = new VentanaServidor(this);
-            ventanaServidor.setVisible(true);
-            this.setVisible(false);
-        });
+    public JButton getBtnServidor() {
+        return btnServidor;
+    }
 
-        btnCliente.addActionListener(e -> {
-            VentanaCliente ventanaCliente = new VentanaCliente(this);
-            ventanaCliente.setVisible(true);
-            this.setVisible(false);
-        });
+    public JButton getBtnCliente() {
+        return btnCliente;
+    }
 
-        btnSalir.addActionListener(e -> {
-            dispose();
-            System.exit(0);
-        });
+    public JButton getBtnSalir() {
+        return btnSalir;
     }
 }

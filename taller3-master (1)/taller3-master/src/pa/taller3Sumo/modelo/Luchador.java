@@ -39,6 +39,18 @@ public class Luchador implements Serializable {
         return nombre;
 
     }
+    
+    public double getPeso() {
+        return peso;
+    }
+
+    public String getTunica() {
+        return tunica;
+    }
+
+public List<String> getTecnicas() {
+    return tecnicas;
+}
 
     public boolean estaDentroDohyo() {
         return dentroDohyo;
