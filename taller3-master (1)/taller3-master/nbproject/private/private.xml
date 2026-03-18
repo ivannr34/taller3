@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/C:/Users/USUARIO/Downloads/taller3-master%20(1)/taller3-master/src/pa/taller3Sumo/vista/VentanaPrincipal.java</file>
+            <file>file:/C:/Users/USUARIO/Downloads/taller3-master%20(1)/taller3-master/src/pa/taller3Sumo/control/ControlKimarite.java</file>
+            <file>file:/C:/Users/USUARIO/Downloads/taller3-master%20(1)/taller3-master/src/pa/taller3Sumo/control/Launcher.java</file>
+            <file>file:/C:/Users/USUARIO/Downloads/taller3-master%20(1)/taller3-master/src/pa/taller3Sumo/modelo/Dohyo.java</file>
+            <file>file:/C:/Users/USUARIO/Downloads/taller3-master%20(1)/taller3-master/src/pa/taller3Sumo/modelo/Luchador.java</file>
+            <file>file:/C:/Users/USUARIO/Downloads/taller3-master%20(1)/taller3-master/src/pa/taller3Sumo/modelo/LuchadorThread.java</file>
+            <file>file:/C:/Users/USUARIO/Downloads/taller3-master%20(1)/taller3-master/src/pa/taller3Sumo/socket/ClienteSocket.java</file>
+            <file>file:/C:/Users/USUARIO/Downloads/taller3-master%20(1)/taller3-master/src/pa/taller3Sumo/socket/ManejadorCliente.java</file>
+            <file>file:/C:/Users/USUARIO/Downloads/taller3-master%20(1)/taller3-master/src/pa/taller3Sumo/socket/ServidorSocket.java</file>
+            <file>file:/C:/Users/USUARIO/Downloads/taller3-master%20(1)/taller3-master/src/pa/taller3Sumo/vista/VentanaCliente.java</file>
+            <file>file:/C:/Users/USUARIO/Downloads/taller3-master%20(1)/taller3-master/src/pa/taller3Sumo/vista/VentanaServidor.java</file>
+        </group>
+    </open-files>
+</project-private>
