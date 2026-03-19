@@ -4,8 +4,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import pa.taller3Sumo.modelo.Luchador;
 import pa.taller3Sumo.modelo.Dohyo;
+import pa.taller3Sumo.modelo.Luchador;
 import pa.taller3Sumo.vista.VentanaServidor;
 
 public class ServidorSocket {
@@ -13,7 +13,7 @@ public class ServidorSocket {
     private static final int PUERTO = 5000;
 
     private final List<Luchador> luchadores = new ArrayList<>();
-    private final List<ManejadorCliente> clientes = new ArrayList<>();
+    private final List<ManejadorCliente> clientesActivos = new ArrayList<>();
     private final VentanaServidor vista;
 
     public ServidorSocket(VentanaServidor vista) {
@@ -24,12 +24,14 @@ public class ServidorSocket {
         try (ServerSocket server = new ServerSocket(PUERTO)) {
 
             vista.registrarMovimiento("Servidor iniciado en puerto " + PUERTO);
+            vista.registrarMovimiento("Esperando 2 clientes...");
 
             while (true) {
                 Socket socket = server.accept();
 
+                vista.registrarMovimiento("Cliente conectado: " + socket.getInetAddress());
+
                 ManejadorCliente handler = new ManejadorCliente(socket, this);
-                clientes.add(handler);
                 handler.start();
             }
 
@@ -39,8 +41,12 @@ public class ServidorSocket {
         }
     }
 
-    public synchronized void agregarLuchador(Luchador luchador) {
+    public synchronized void agregarLuchador(Luchador luchador, ManejadorCliente cliente) {
         luchadores.add(luchador);
+
+        if (!clientesActivos.contains(cliente)) {
+            clientesActivos.add(cliente);
+        }
 
         vista.registrarMovimiento("Luchador recibido: " + luchador.getNombre());
 
@@ -49,37 +55,40 @@ public class ServidorSocket {
         }
     }
 
-    private void iniciarCombate() {
-        Dohyo dohyo = new Dohyo(luchadores.get(0), luchadores.get(1));
-
+    private synchronized void iniciarCombate() {
         vista.registrarMovimiento("Iniciando combate...");
 
+        Dohyo dohyo = new Dohyo(luchadores.get(0), luchadores.get(1), vista);
         dohyo.iniciarCombate();
 
         Luchador ganador = dohyo.getGanador();
 
         if (ganador == null) {
             vista.registrarMovimiento("No se pudo determinar el ganador.");
-            luchadores.clear();
+            limpiarRonda();
             return;
         }
 
-        String resumenCombate = construirResumenCombate(dohyo, ganador);
+        String resumenCombate = construirResumenCombate(ganador);
 
         vista.registrarMovimiento("GANADOR: " + ganador.getNombre());
 
-        // 🔥 AQUÍ SE CONECTA LA VENTANA GANADOR
+        // Mostrar ventana del ganador
         vista.mostrarGanador(ganador.getNombre(), resumenCombate);
 
+        // Enviar resultado a los 2 clientes de esta ronda
         enviarResultadosClientes(ganador);
 
-        luchadores.clear();
+        // Limpiar para la siguiente pelea
+        limpiarRonda();
+        vista.registrarMovimiento("Servidor listo para una nueva pelea. Esperando 2 clientes...");
     }
 
-    private String construirResumenCombate(Dohyo dohyo, Luchador ganador) {
+    private String construirResumenCombate(Luchador ganador) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("===== RESUMEN DEL COMBATE =====\n\n");
+        sb.append("RESUMEN DEL COMBATE\n\n");
+
         sb.append("Luchador 1: ").append(luchadores.get(0).getNombre())
           .append(" | Peso: ").append(luchadores.get(0).getPeso())
           .append(" | Túnica: ").append(luchadores.get(0).getTunica()).append("\n");
@@ -94,7 +103,7 @@ public class ServidorSocket {
     }
 
     private void enviarResultadosClientes(Luchador ganador) {
-        for (ManejadorCliente cliente : clientes) {
+        for (ManejadorCliente cliente : clientesActivos) {
             if (cliente.getLuchador() != null) {
                 if (cliente.getLuchador().getNombre().equals(ganador.getNombre())) {
                     cliente.enviarResultado("GANASTE");
@@ -103,5 +112,10 @@ public class ServidorSocket {
                 }
             }
         }
+    }
+
+    private void limpiarRonda() {
+        luchadores.clear();
+        clientesActivos.clear();
     }
 }

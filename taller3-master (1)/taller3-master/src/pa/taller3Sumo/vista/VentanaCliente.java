@@ -2,13 +2,13 @@ package pa.taller3Sumo.vista;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 import pa.taller3Sumo.control.ControlCliente;
 import pa.taller3Sumo.modelo.Luchador;
 
 public class VentanaCliente extends JFrame {
 
-    private VentanaLuchador panelLuchador1;
-    private VentanaLuchador panelLuchador2;
+    private VentanaLuchador panelLuchador;
 
     private JButton botonEnviar;
     private JButton botonVolver;
@@ -27,18 +27,29 @@ public class VentanaCliente extends JFrame {
     }
 
     private void configurarVentana() {
-        setTitle("Registro de 2 Luchadores");
-        setSize(900, 500);
+        setTitle("Registro de Luchador");
+        setSize(500, 550);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
     }
 
     private void inicializarComponentes() {
-        panelLuchador1 = new VentanaLuchador("Luchador 1");
-        panelLuchador2 = new VentanaLuchador("Luchador 2");
+        List<String> tecnicasDisponibles;
 
-        botonEnviar = new JButton("Enviar Luchadores");
+        try {
+            tecnicasDisponibles = controlCliente.obtenerTecnicasDisponibles();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error cargando técnicas: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            tecnicasDisponibles = java.util.Collections.emptyList();
+        }
+
+        panelLuchador = new VentanaLuchador("Luchador", tecnicasDisponibles);
+
+        botonEnviar = new JButton("Enviar Luchador");
         botonVolver = new JButton("Volver");
 
         botonEnviar.setFont(new Font("Arial", Font.BOLD, 15));
@@ -46,15 +57,13 @@ public class VentanaCliente extends JFrame {
     }
 
     private void construirInterfaz() {
-        JLabel titulo = new JLabel("REGISTRO DE LUCHADORES", JLabel.CENTER);
+        JLabel titulo = new JLabel("REGISTRO DEL LUCHADOR", JLabel.CENTER);
         titulo.setFont(new Font("Arial", Font.BOLD, 22));
         add(titulo, BorderLayout.NORTH);
 
-        JPanel panelCentral = new JPanel(new GridLayout(1, 2, 15, 15));
+        JPanel panelCentral = new JPanel(new BorderLayout());
         panelCentral.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        panelCentral.add(panelLuchador1);
-        panelCentral.add(panelLuchador2);
+        panelCentral.add(panelLuchador, BorderLayout.CENTER);
 
         add(panelCentral, BorderLayout.CENTER);
 
@@ -66,7 +75,7 @@ public class VentanaCliente extends JFrame {
     }
 
     private void agregarEventos() {
-        botonEnviar.addActionListener(e -> enviarLuchadores());
+        botonEnviar.addActionListener(e -> enviarLuchador());
         botonVolver.addActionListener(e -> volverAVentanaPrincipal());
 
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -77,51 +86,62 @@ public class VentanaCliente extends JFrame {
         });
     }
 
-    private void enviarLuchadores() {
+    private void enviarLuchador() {
         try {
-            Luchador luchador1 = construirLuchadorDesdePanel(panelLuchador1, 1);
-            if (luchador1 == null) return;
+            String nombre = panelLuchador.getNombreLuchador();
 
-            Luchador luchador2 = construirLuchadorDesdePanel(panelLuchador2, 2);
-            if (luchador2 == null) return;
+            if (nombre.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "El nombre del luchador no puede estar vacío.");
+                return;
+            }
 
-            controlCliente.enviarLuchadores(luchador1, luchador2);
+            double peso;
+            try {
+                peso = Double.parseDouble(panelLuchador.getPesoLuchador());
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "El peso debe ser un número válido.");
+                return;
+            }
 
-            JOptionPane.showMessageDialog(this, "Los 2 luchadores fueron enviados correctamente.");
-            limpiarCampos();
+            if (panelLuchador.getTecnicasSeleccionadas().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Debes seleccionar al menos una técnica.");
+                return;
+            }
+
+            Luchador luchador = controlCliente.crearLuchador(
+                    nombre,
+                    peso,
+                    panelLuchador.getTunicaSeleccionada(),
+                    panelLuchador.getTecnicasSeleccionadas()
+            );
+
+            botonEnviar.setEnabled(false);
+            registrarEstado("Luchador enviado. Esperando resultado del combate...");
+
+            // ⚠️ Esto puede tardar porque espera al segundo cliente
+            new Thread(() -> {
+                String resultado = controlCliente.enviarLuchador(luchador);
+
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(this, "Resultado: " + resultado);
+                    registrarEstado("Resultado recibido: " + resultado);
+                    botonEnviar.setEnabled(true);
+                    panelLuchador.limpiarCampos();
+                });
+            }).start();
 
         } catch (Exception ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                    "Error al enviar los luchadores: " + ex.getMessage(),
+                    "Error al enviar el luchador: " + ex.getMessage(),
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
+            botonEnviar.setEnabled(true);
         }
     }
 
-    private Luchador construirLuchadorDesdePanel(VentanaLuchador panel, int numero) {
-        String nombre = panel.getNombreLuchador();
-
-        if (nombre.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "El nombre del Luchador " + numero + " no puede estar vacío.");
-            return null;
-        }
-
-        double peso;
-        try {
-            peso = Double.parseDouble(panel.getPesoLuchador());
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "El peso del Luchador " + numero + " debe ser un número válido.");
-            return null;
-        }
-
-        return controlCliente.crearLuchador(nombre, peso, panel.getTunicaSeleccionada());
-    }
-
-    private void limpiarCampos() {
-        panelLuchador1.limpiarCampos();
-        panelLuchador2.limpiarCampos();
+    private void registrarEstado(String mensaje) {
+        setTitle("Registro de Luchador - " + mensaje);
     }
 
     private void volverAVentanaPrincipal() {

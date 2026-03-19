@@ -7,26 +7,28 @@ import java.util.Properties;
 
 public class ControlKimarite {
 
-    public static List<String> cargarTecnicas(){
-
+    public static List<String> cargarTecnicas() {
         List<String> tecnicas = new ArrayList<>();
 
-        try{
-
+        try {
             Properties props = new Properties();
 
             InputStream is = ControlKimarite.class
                     .getResourceAsStream("/pa/taller3Sumo/libreria/kimarites.properties");
 
-            props.load(is);
-
-            for(Object key : props.keySet()){
-
-                tecnicas.add(props.getProperty(key.toString()));
-
+            if (is == null) {
+                throw new RuntimeException("No se encontró el archivo kimarites.properties en la ruta /pa/taller3Sumo/libreria/");
             }
 
-        }catch(Exception e){
+            props.load(is);
+
+            for (Object key : props.keySet()) {
+                tecnicas.add(props.getProperty(key.toString()));
+            }
+
+            is.close();
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

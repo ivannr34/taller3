@@ -7,24 +7,33 @@ import pa.taller3Sumo.modelo.Luchador;
 
 public class ClienteSocket {
 
-    public void enviarLuchador(Luchador luchador) {
+    public String enviarLuchador(Luchador luchador) {
+        String resultado = "Sin respuesta del servidor";
 
-        try {
-
+        try (
             Socket socket = new Socket("localhost", 5000);
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+        ) {
+            // IMPORTANTE: mandar el header del ObjectOutputStream
+            out.flush();
 
-            ObjectOutputStream out
-                    = new ObjectOutputStream(socket.getOutputStream());
-
+            // Enviar luchador
             out.writeObject(luchador);
+            out.flush();
 
-            socket.close();
+            // Esperar respuesta del servidor
+            Object respuesta = in.readObject();
+
+            if (respuesta instanceof String) {
+                resultado = (String) respuesta;
+            }
 
         } catch (Exception e) {
-
             e.printStackTrace();
-
+            resultado = "Error de conexión: " + e.getMessage();
         }
 
+        return resultado;
     }
 }

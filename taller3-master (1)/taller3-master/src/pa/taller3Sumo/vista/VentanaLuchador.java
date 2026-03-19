@@ -1,113 +1,123 @@
 package pa.taller3Sumo.vista;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class VentanaLuchador extends JPanel {
 
-    private static final String ROJA = "Roja";
-    private static final String AZUL = "Azul";
-    private static final String NEGRA = "Negra";
+    private JTextField txtNombre;
+    private JTextField txtPeso;
 
-    private JTextField campoNombre;
-    private JTextField campoPeso;
+    private JRadioButton rbRoja;
+    private JRadioButton rbAzul;
+    private JRadioButton rbNegra;
 
-    private JButton btnRoja;
-    private JButton btnAzul;
-    private JButton btnNegra;
+    private ButtonGroup grupoTunica;
 
-    private String tunicaSeleccionada = ROJA;
+    private List<JCheckBox> checkTecnicas;
 
-    public VentanaLuchador(String titulo) {
-        inicializarComponentes();
-        construirPanel(titulo);
-        agregarEventos();
-        actualizarSeleccionTunica();
-    }
+    public VentanaLuchador(String titulo, List<String> tecnicasDisponibles) {
+        setLayout(new BorderLayout());
 
-    private void inicializarComponentes() {
-        campoNombre = new JTextField();
-        campoPeso = new JTextField();
+        JPanel panelFormulario = new JPanel();
+        panelFormulario.setLayout(new BoxLayout(panelFormulario, BoxLayout.Y_AXIS));
 
-        btnRoja = crearBotonTunica(Color.RED, Color.BLACK);
-        btnAzul = crearBotonTunica(Color.BLUE, Color.BLACK);
-        btnNegra = crearBotonTunica(Color.BLACK, Color.WHITE);
-    }
+        // Título del panel
+        JLabel lblTitulo = new JLabel(titulo, JLabel.CENTER);
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 18));
+        lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panelFormulario.add(lblTitulo);
+        panelFormulario.add(Box.createVerticalStrut(10));
 
-    private void construirPanel(String titulo) {
-        setLayout(new BorderLayout(10, 10));
-        setBorder(BorderFactory.createTitledBorder(titulo));
+        // Nombre
+        panelFormulario.add(new JLabel("Nombre:"));
+        txtNombre = new JTextField();
+        panelFormulario.add(txtNombre);
+        panelFormulario.add(Box.createVerticalStrut(10));
 
-        JPanel datos = new JPanel(new GridLayout(4, 2, 5, 5));
+        // Peso
+        panelFormulario.add(new JLabel("Peso:"));
+        txtPeso = new JTextField();
+        panelFormulario.add(txtPeso);
+        panelFormulario.add(Box.createVerticalStrut(10));
 
-        datos.add(new JLabel("Nombre:"));
-        datos.add(campoNombre);
+        // Túnica
+        panelFormulario.add(new JLabel("Túnica:"));
+        JPanel panelTunica = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-        datos.add(new JLabel("Peso:"));
-        datos.add(campoPeso);
+        rbRoja = new JRadioButton("Roja");
+        rbAzul = new JRadioButton("Azul");
+        rbNegra = new JRadioButton("Negra");
 
-        datos.add(new JLabel("Túnica:"));
+        grupoTunica = new ButtonGroup();
+        grupoTunica.add(rbRoja);
+        grupoTunica.add(rbAzul);
+        grupoTunica.add(rbNegra);
 
-        JPanel panelTunicas = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panelTunicas.add(btnRoja);
-        panelTunicas.add(btnAzul);
-        panelTunicas.add(btnNegra);
+        panelTunica.add(rbRoja);
+        panelTunica.add(rbAzul);
+        panelTunica.add(rbNegra);
 
-        datos.add(panelTunicas);
+        panelFormulario.add(panelTunica);
+        panelFormulario.add(Box.createVerticalStrut(10));
 
-        add(datos, BorderLayout.NORTH);
-    }
+        // Técnicas
+        panelFormulario.add(new JLabel("Selecciona las técnicas:"));
 
-    private JButton crearBotonTunica(Color fondo, Color texto) {
-        JButton boton = new JButton(" ");
-        boton.setBackground(fondo);
-        boton.setForeground(texto);
-        boton.setOpaque(true);
-        boton.setPreferredSize(new Dimension(40, 25));
-        return boton;
-    }
+        JPanel panelTecnicas = new JPanel(new GridLayout(0, 2, 5, 5));
+        checkTecnicas = new ArrayList<>();
 
-    private void agregarEventos() {
-        btnRoja.addActionListener(e -> seleccionarTunica(ROJA));
-        btnAzul.addActionListener(e -> seleccionarTunica(AZUL));
-        btnNegra.addActionListener(e -> seleccionarTunica(NEGRA));
-    }
+        for (String tecnica : tecnicasDisponibles) {
+            JCheckBox check = new JCheckBox(tecnica);
+            checkTecnicas.add(check);
+            panelTecnicas.add(check);
+        }
 
-    private void seleccionarTunica(String tunica) {
-        tunicaSeleccionada = tunica;
-        actualizarSeleccionTunica();
-    }
+        JScrollPane scrollTecnicas = new JScrollPane(panelTecnicas);
+        scrollTecnicas.setPreferredSize(new Dimension(400, 200));
 
-    private void actualizarSeleccionTunica() {
-        btnRoja.setBorder(BorderFactory.createLineBorder(ROJA.equals(tunicaSeleccionada) ? Color.GREEN : Color.GRAY, 3));
-        btnAzul.setBorder(BorderFactory.createLineBorder(AZUL.equals(tunicaSeleccionada) ? Color.GREEN : Color.GRAY, 3));
-        btnNegra.setBorder(BorderFactory.createLineBorder(NEGRA.equals(tunicaSeleccionada) ? Color.GREEN : Color.GRAY, 3));
+        panelFormulario.add(scrollTecnicas);
+
+        add(panelFormulario, BorderLayout.CENTER);
     }
 
     public String getNombreLuchador() {
-        return campoNombre.getText().trim();
+        return txtNombre.getText().trim();
     }
 
     public String getPesoLuchador() {
-        return campoPeso.getText().trim();
+        return txtPeso.getText().trim();
     }
 
     public String getTunicaSeleccionada() {
-        return tunicaSeleccionada;
+        if (rbRoja.isSelected()) return "Roja";
+        if (rbAzul.isSelected()) return "Azul";
+        if (rbNegra.isSelected()) return "Negra";
+        return "";
+    }
+
+    public List<String> getTecnicasSeleccionadas() {
+        List<String> seleccionadas = new ArrayList<>();
+
+        for (JCheckBox check : checkTecnicas) {
+            if (check.isSelected()) {
+                seleccionadas.add(check.getText());
+            }
+        }
+
+        return seleccionadas;
     }
 
     public void limpiarCampos() {
-        campoNombre.setText("");
-        campoPeso.setText("");
-        tunicaSeleccionada = ROJA;
-        actualizarSeleccionTunica();
+        txtNombre.setText("");
+        txtPeso.setText("");
+
+        grupoTunica.clearSelection();
+
+        for (JCheckBox check : checkTecnicas) {
+            check.setSelected(false);
+        }
     }
 }
